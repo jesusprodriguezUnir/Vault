@@ -1,0 +1,5 @@
+site_name,username,password,category,environment
+Facebook,mark.zuckerberg,facepass123,Social,Production
+Local Database,admin,secret_root,Dev,Local
+AWS Console,deviops,cloud_key_999,Infrastructure,Production
+Test App,tester,testpass,QA,Staging

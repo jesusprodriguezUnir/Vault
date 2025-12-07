@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Password Vault</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            background: #f4f4f4;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1,
+        h2 {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.5rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .password-display {
+            font-family: monospace;
+            color: #d9534f;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔐 Secure Vault</h1>
+
+        <div id="setup-section" class="hidden">
+            <h2>Initial Setup</h2>
+            <p>Create your Master User. <strong>WARNING: If you lose your Master Password, your data is lost
+                    forever.</strong></p>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="setup-user">
+            </div>
+            <div class="form-group">
+                <label>Master Password</label>
+                <input type="password" id="setup-pass">
+            </div>
+            <button onclick="setupUser()">Initialize Vault</button>
+        </div>
+
+        <div id="main-section" class="hidden">
+            <div class="form-group">
+                <label>Session Master Password (Required for all operations)</label>
+                <input type="password" id="session-mp" placeholder="Enter Master Password to Unlock/Add">
+            </div>
+
+            <hr>
+
+            <h3>Add New Password</h3>
+            <div class="form-group">
+                <input type="text" id="new-site" placeholder="Site Name (e.g. Google)">
+            </div>
+            <div class="form-group">
+                <input type="text" id="new-username" placeholder="Username/Email">
+            </div>
+
+            <!-- Category and Environment -->
+            <div class="form-group" style="display: flex; gap: 1rem;">
+                <div style="flex: 1;">
+                    <label>Category</label>
+                    <input type="text" id="new-category" list="category-list" placeholder="General">
+                    <datalist id="category-list">
+                        <option value="General"></option>
+                        <option value="Work"></option>
+                        <option value="App"></option>
+                        <option value="API Key"></option>
+                        <option value="Finance"></option>
+                    </datalist>
+                </div>
+                <div style="flex: 1;">
+                    <label>Environment</label>
+                    <select id="new-environment" style="width: 100%; padding: 0.5rem;">
+                        <option value="Production">Production</option>
+                        <option value="Staging">Staging</option>
+                        <option value="Development">Development</option>
+                        <option value="Local">Local</option>
+                        <option value="Test">Test</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="new-pass" placeholder="Password">
+            </div>
+            <button onclick="addPassword()">Save Encrypted</button>
+
+            <hr>
+
+            <h3>Bulk Actions</h3>
+            <div class="form-group" style="display: flex; gap: 1rem; align-items: center;">
+                <button onclick="window.location.href='/export/template'" style="background: #28a745;">Download CSV
+                    Template</button>
+
+                <div
+                    style="flex: 1; display: flex; gap: 0.5rem; align-items: center; border: 1px dashed #ccc; padding: 0.5rem;">
+                    <input type="file" id="csv-file" accept=".csv">
+                    <button onclick="importCSV()" style="background: #17a2b8;">Import CSV</button>
+                </div>
+            </div>
+
+            <hr>
+
+            <h3>Stored Passwords</h3>
+            <button onclick="loadItems()">Refresh List</button>
+            <table id="items-table">
+                <thead>
+                    <tr>
+                        <th>Site</th>
+                        <th>User</th>
+                        <th>Cat</th>
+                        <th>Env</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "";
+
+        async function setupUser() {
+            const username = document.getElementById('setup-user').value;
+            const password = document.getElementById('setup-pass').value;
+
+            const res = await fetch('/setup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, master_password: password })
+            });
+
+            if (res.ok) {
+                alert('Setup Complete! You can now use the vault.');
+                document.getElementById('setup-section').classList.add('hidden');
+                document.getElementById('main-section').classList.remove('hidden');
+                loadItems();
+            } else {
+                const err = await res.json();
+                alert('Error: ' + err.detail);
+            }
+        }
+
+        async function loadItems() {
+            const res = await fetch('/items');
+            if (res.ok) {
+                const items = await res.json();
+                const tbody = document.querySelector('#items-table tbody');
+                tbody.innerHTML = '';
+                items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${item.site_name}</td>
+                        <td>${item.username || ''}</td>
+                        <td><small>${item.category}</small></td>
+                        <td><small>${item.environment}</small></td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button onclick="decrypt('${item.id}')">Reveal</button>
+                                <button onclick="deleteItem('${item.id}', '${item.site_name}')" style="background: #dc3545;">Delete</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                console.error("Failed to load items");
+            }
+        }
+
+        async function addPassword() {
+            const mp = document.getElementById('session-mp').value;
+            if (!mp) return alert('Please enter Master Password above first.');
+
+            const site = document.getElementById('new-site').value;
+            const user = document.getElementById('new-username').value;
+            const cat = document.getElementById('new-category').value || 'General';
+            const env = document.getElementById('new-environment').value;
+            const pass = document.getElementById('new-pass').value;
+
+            const res = await fetch('/items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    site_name: site,
+                    username: user,
+                    category: cat,
+                    environment: env,
+                    plaintext_password: pass,
+                    master_password: mp
+                })
+            });
+
+            if (res.ok) {
+                alert('Password Saved!');
+                document.getElementById('new-site').value = '';
+                document.getElementById('new-username').value = '';
+                document.getElementById('new-pass').value = '';
+                loadItems();
+            } else {
+                const err = await res.json();
+                alert('Error: ' + err.detail);
+                if (err && err.detail && err.detail.includes("not initialized")) {
+                    document.getElementById('setup-section').classList.remove('hidden');
+                    document.getElementById('main-section').classList.add('hidden');
+                }
+            }
+        }
+
+        async function decrypt(id) {
+            const mp = document.getElementById('session-mp').value;
+            if (!mp) return alert('Please enter Master Password above first.');
+
+            const res = await fetch('/decrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    entry_id: id,
+                    master_password: mp
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                alert(`Decrypted Password for ${data.site_name}:\n\n${data.decrypted_password}`);
+            } else {
+                const err = await res.json();
+                alert('Error: ' + err.detail);
+            }
+        }
+
+        async function deleteItem(id, site) {
+            const mp = document.getElementById('session-mp').value;
+            if (!mp) return alert('Please enter Master Password for authorization.');
+
+            if (!confirm(`Are you sure you want to delete ${site}?`)) return;
+
+            const formData = new FormData();
+            formData.append('master_password', mp);
+
+            const res = await fetch(`/items/${id}`, {
+                method: 'DELETE',
+                body: formData
+            });
+
+            if (res.ok) {
+                loadItems();
+            } else {
+                const err = await res.json();
+                alert('Error: ' + err.detail);
+            }
+        }
+
+        async function importCSV() {
+            const mp = document.getElementById('session-mp').value;
+            if (!mp) return alert('Please enter Master Password for encryption.');
+
+            const fileInput = document.getElementById('csv-file');
+            if (fileInput.files.length === 0) return alert('Please select a CSV file.');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('master_password', mp);
+
+            const res = await fetch('/import/csv', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const result = await res.json();
+                alert(result.message);
+                loadItems();
+            } else {
+                const err = await res.json();
+                alert('Error: ' + err.detail);
+            }
+        }
+
+        // Init Check
+        (async () => {
+            const res = await fetch('/items');
+            if (res.status === 400 || res.status === 500) {
+                document.getElementById('setup-section').classList.remove('hidden');
+            } else {
+                document.getElementById('main-section').classList.remove('hidden');
+                loadItems();
+            }
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,69 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-7.4.3, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /app
+plugins: anyio-4.12.0
+collecting ... collected 1 item
+
+tests/test_vault.py::test_delete_item FAILED                             [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_delete_item _______________________________
+
+setup_db = None, ensure_user = None
+
+    def test_delete_item(setup_db, ensure_user):
+        # 1. Create Item
+        item_data = {
+            "site_name": "ToDelete",
+            "username": "temp",
+            "plaintext_password": "pw",
+            "master_password": "masterpassword",
+            "category": "Tmp",
+            "environment": "Test"
+        }
+        response = client.post("/items", json=item_data)
+        assert response.status_code == 200
+        item_id = response.json()["id"]
+    
+        # 2. Delete without MP -> Fail 422 (Validation) or 401
+        # Note: Form data requires 'master_password' field. If missing, FastAPI returns 422 validation error.
+        response = client.delete(f"/items/{item_id}")
+        assert response.status_code == 422
+    
+        # 3. Delete with Wrong MP -> Fail 401
+>       response = client.delete(f"/items/{item_id}", data={"master_password": "wrong"})
+E       TypeError: TestClient.delete() got an unexpected keyword argument 'data'
+
+tests/test_vault.py:149: TypeError
+=============================== warnings summary ===============================
+app/database.py:14
+  /app/app/database.py:14: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+../usr/local/lib/python3.11/site-packages/pydantic/_internal/_config.py:271
+  /usr/local/lib/python3.11/site-packages/pydantic/_internal/_config.py:271: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+app/main.py:23
+  /app/app/main.py:23: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+../usr/local/lib/python3.11/site-packages/fastapi/applications.py:4495
+  /usr/local/lib/python3.11/site-packages/fastapi/applications.py:4495: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_vault.py::test_delete_item - TypeError: TestClient.delete()...
+======================== 1 failed, 4 warnings in 1.28s =========================

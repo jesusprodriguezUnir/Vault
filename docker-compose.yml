@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: vaultuser
+      POSTGRES_PASSWORD: vaultpassword
+      POSTGRES_DB: vaultdb
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Optional: Expose DB to host for debugging
+
+  web:
+    build: .
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://vaultuser:vaultpassword@db:5432/vaultdb
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+    volumes:
+      # Map current dir for easier development/debugging without rebuilding
+      - .:/app
+
+volumes:
+  pg_data:
