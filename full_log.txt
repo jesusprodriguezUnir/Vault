@@ -1,13 +1,35 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.14, pytest-7.4.3, pluggy-1.6.0 -- /usr/local/bin/python
+platform linux -- Python 3.11.14, pytest-7.4.3, pluggy-1.6.0 -- /usr/local/bin/python3.11
 cachedir: .pytest_cache
 rootdir: /app
 plugins: anyio-4.12.0
 collecting ... collected 2 items
 
 tests/test_vault.py::test_full_hierarchy_flow PASSED                     [ 50%]
-tests/test_vault.py::test_delete_flow PASSED                             [100%]
+tests/test_vault.py::test_edit_delete_flow FAILED                        [100%]
 
+=================================== FAILURES ===================================
+____________________________ test_edit_delete_flow _____________________________
+
+setup_db = None
+
+    def test_edit_delete_flow(setup_db):
+        # 1. Create Cat
+        res = client.post("/categories", json={"name": "TempCat", "description": "Desc", "master_password": "mp"})
+        assert res.status_code == 200
+        cat_id = res.json()["id"]
+    
+        # 2. Update Cat
+        res = client.put(f"/categories/{cat_id}", json={
+            "name": "TempCat_Updated",
+            "description": "Desc_New",
+            "master_password": "mp"
+        })
+>       assert res.status_code == 200
+E       assert 422 == 200
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+tests/test_vault.py:98: AssertionError
 =============================== warnings summary ===============================
 app/database.py:14
   /app/app/database.py:14: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
@@ -39,4 +61,6 @@ app/main.py:25
     return self.router.on_event(event_type)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-======================== 2 passed, 7 warnings in 4.19s =========================
+=========================== short test summary info ============================
+FAILED tests/test_vault.py::test_edit_delete_flow - assert 422 == 200
+=================== 1 failed, 1 passed, 7 warnings in 3.73s ====================

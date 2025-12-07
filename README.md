@@ -1,59 +1,72 @@
-# 🔐 Secure Password Vault
+# Secure Password Vault v2.0
 
-A self-hosted, Dockerized Password Manager with AES-256 encryption.
+A self-hosted, simplified password manager designed for security and portability. 
+Built with **FastAPI**, **PostgreSQL/SQLite**, and **Docker**.
 
-## Architecture
-- **Backend**: FastAPI (Python)
-- **Database**: PostgreSQL (Dockerized)
-- **Security**: 
-  - **Cipher**: AES-256-GCM (Authenticated Encryption)
-  - **Key Derivation**: Argon2id (Master Password -> Encryption Key)
-  - **Auth**: Argon2id Hash of Master Password
-- **Frontend**: Simple HTML/JS (Single Page Application)
+## Features 🚀
 
-## Prerequisites
-- Docker Engine
-- Docker Compose
+- **Hierarchical Storage**: Organize passwords by `Category` -> `Application` -> `Password Entries`.
+- **Encryption**: AES-256-GCM encryption for all sensitive fields. Keys are derived from your Master Password using Argon2id.
+- **Zero-Knowledge Architecture**: The detailed master password is never stored on disk.
+- **Modern UI**: Single Page Application (SPA) with Sidebar navigation, Search, and Filters.
+- **Bulk Operations**:
+  - Import/Export standard JSON format.
+  - Large-scale Seeding Scripts included.
+- **Full CRUD**: Create, Read, Update, Delete for Categories, Applications, and Passwords.
 
-## Quick Start 🚀
+## Architecture 🏗️
 
-1.  **Build and Run**:
-    ```powershell
-    docker-compose up --build
-    ```
-    *Wait for the logs to say `Uvicorn running on http://0.0.0.0:8000` and `Database connection successful`.*
+### Backend (`app/`)
+- **FastAPI**: High-performance API.
+- **SQLAlchemy**: ORM for database interactions.
+- **Security**: strict `verify_master_password` check on all write operations.
+- **Database**: 
+    - `categories`: High-level groups (Work, Personal).
+    - `applications`: specific services (Jira, Gmail).
+    - `passwords`: actual credentials (encrypted).
 
-2.  **Access the Vault**:
-    Open your browser to: [http://localhost:8001](http://localhost:8001)
+### Frontend (`static/`)
+- Vanilla JS/HTML5 SPA.
+- Responsive Sidebar layout.
+- interactive Modals for management.
 
-3.  **Usage**:
-    1.  **Initialize**: Enter a Username and a **Master Password**.
-## Running Locally (Hybrid Mode) 🛠️
-*Recommended for development. Uses Docker for DB, but runs Python locally.*
+## Installation & Running 🛠️
 
-1.  **Start Database**:
-    ```powershell
-    docker-compose up -d db
-    ```
+Prerequisites: **Docker** and **Docker Compose**.
 
-2.  **Install Dependencies**:
-    ```powershell
-    pip install -r requirements.txt
-    pip install psycopg2-binary
-    ```
+1. **Clone/Open the project**.
+2. **Start the stack**:
+   ```bash
+   docker-compose up -d --build
+   ```
+3. **Access the Application**:
+   Open **[http://localhost:8001](http://localhost:8001)** in your browser.
 
-3.  **Run Application**:
-    ```powershell
-    uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    ```
-    Access at: [http://localhost:8000](http://localhost:8000)
+4. **Initial Setup**:
+   The first time you load the page, you will be prompted to create a **Master Password**. MEmorize it! There is no recovery.
 
-## Clean Up
-To stop the application:
-```powershell
-docker-compose down
+## Development Tools 🧪
+
+### Test Suite
+Run the automated tests (using `pytest`):
+```bash
+docker-compose exec web pytest tests/ -v
 ```
-To delete data (reset everything):
-```powershell
-docker-compose down -v
+
+### Data Seeding
+Populate the database with sample data (20 Categories, 100 Apps):
+```bash
+# 1. Clear existing DB (optional: docker-compose down -v)
+# 2. Run Seed Script
+docker-compose exec web python seed_data.py
+
+# 3. Generate Passwords for all Apps
+docker-compose exec web python seed_passwords.py
 ```
+
+### Manual Verification
+- **Import/Export**: Use the JSON buttons on the Dashboard.
+- **Edit/Delete**: Use the action buttons in the Category/Application lists. Note that deleting a Category **cascades** and deletes all its applications.
+
+## License
+MIT

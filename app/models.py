@@ -1,10 +1,12 @@
-from sqlalchemy import Column, Integer, String, LargeBinary, DateTime, Text
+from sqlalchemy import Column, Integer, String, LargeBinary, DateTime, Text, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.types import TypeDecorator, CHAR
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 import datetime
 from .database import Base
 
+# --- GUID Type for SQLite/Postgres Compatibility ---
 class GUID(TypeDecorator):
     """Platform-independent GUID type.
     Uses PostgreSQL's UUID type, otherwise uses
@@ -28,7 +30,6 @@ class GUID(TypeDecorator):
             if not isinstance(value, uuid.UUID):
                 return "%.32x" % uuid.UUID(value).int
             else:
-                # hexstring
                 return "%.32x" % value.int
 
     def process_result_value(self, value, dialect):
@@ -45,24 +46,45 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
-    password_hash = Column(String, nullable=False) # Argon2 hash of Master Password
-    # We store the salt used for the Master Key derivation here.
-    # When user provides MP, we combine with this salt to regenerate the MK for AES.
+    password_hash = Column(String, nullable=False) 
     master_key_salt = Column(LargeBinary, nullable=False) 
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    name = Column(String, unique=True, index=True, nullable=False)
+    description = Column(String, nullable=True)
+    
+    # Relationship
+    applications = relationship("Application", back_populates="category", cascade="all, delete-orphan")
+
+class Application(Base):
+    __tablename__ = "applications"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    name = Column(String, index=True, nullable=False)
+    description = Column(String, nullable=True)
+    category_id = Column(GUID(), ForeignKey("categories.id"), nullable=False)
+
+    # Relationships
+    category = relationship("Category", back_populates="applications")
+    passwords = relationship("PasswordEntry", back_populates="application", cascade="all, delete-orphan")
 
 class PasswordEntry(Base):
     __tablename__ = "passwords"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    site_name = Column(String, index=True, nullable=False)
-    username = Column(String, nullable=True)
+    application_id = Column(GUID(), ForeignKey("applications.id"), nullable=False)
     
-    # Classification
-    category = Column(String, nullable=False, default="General") # e.g. API Key, Web, App
-    environment = Column(String, nullable=False, default="Production") # e.g. Prod, Dev, Local
+    username = Column(String, nullable=True)
+    environment = Column(String, nullable=False, default="Production")
 
     # Encrypted fields
     encrypted_password = Column(LargeBinary, nullable=False)
-    nonce = Column(LargeBinary, nullable=False) # Needed for AES-GCM
+    nonce = Column(LargeBinary, nullable=False) 
     
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationship
+    application = relationship("Application", back_populates="passwords")

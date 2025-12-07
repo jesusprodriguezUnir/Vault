@@ -1,0 +1,224 @@
+{
+    "categories": [
+        {
+            "name": "Cloud Services",
+            "description": "Cloud infrastructure providers",
+            "apps": [
+                "AWS",
+                "Google Cloud",
+                "Azure",
+                "DigitalOcean",
+                "Heroku"
+            ]
+        },
+        {
+            "name": "DevOps Tools",
+            "description": "CI/CD and containerization",
+            "apps": [
+                "Docker Hub",
+                "Kubernetes",
+                "Jenkins",
+                "GitLab CI",
+                "CircleCI"
+            ]
+        },
+        {
+            "name": "Development",
+            "description": "Code hosting and editors",
+            "apps": [
+                "GitHub",
+                "GitLab",
+                "Bitbucket",
+                "VS Code Sync",
+                "JetBrains"
+            ]
+        },
+        {
+            "name": "Communication",
+            "description": "Team chat and video",
+            "apps": [
+                "Slack",
+                "Discord",
+                "Microsoft Teams",
+                "Zoom",
+                "Google Meet"
+            ]
+        },
+        {
+            "name": "Project Management",
+            "description": "Task tracking",
+            "apps": [
+                "Jira",
+                "Trello",
+                "Asana",
+                "Monday.com",
+                "Notion"
+            ]
+        },
+        {
+            "name": "Design",
+            "description": "UI/UX and graphics",
+            "apps": [
+                "Figma",
+                "Adobe Creative Cloud",
+                "Canva",
+                "Sketch",
+                "InVision"
+            ]
+        },
+        {
+            "name": "Social Media",
+            "description": "Social networks",
+            "apps": [
+                "Twitter",
+                "LinkedIn",
+                "Facebook",
+                "Instagram",
+                "Reddit"
+            ]
+        },
+        {
+            "name": "Email Services",
+            "description": "Mail providers",
+            "apps": [
+                "Gmail",
+                "Outlook",
+                "ProtonMail",
+                "Yahoo Mail",
+                "Fastmail"
+            ]
+        },
+        {
+            "name": "Finance",
+            "description": "Banking and payments",
+            "apps": [
+                "Chase",
+                "PayPal",
+                "Stripe",
+                "Wise",
+                "Robinhood"
+            ]
+        },
+        {
+            "name": "Streaming",
+            "description": "Video and music",
+            "apps": [
+                "Netflix",
+                "Spotify",
+                "YouTube",
+                "Disney+",
+                "Twitch"
+            ]
+        },
+        {
+            "name": "Shopping",
+            "description": "E-commerce",
+            "apps": [
+                "Amazon",
+                "eBay",
+                "Walmart",
+                "AliExpress",
+                "Etsy"
+            ]
+        },
+        {
+            "name": "Gaming",
+            "description": "Game stores",
+            "apps": [
+                "Steam",
+                "Epic Games",
+                "PlayStation Network",
+                "Xbox Live",
+                "Nintendo eShop"
+            ]
+        },
+        {
+            "name": "Security",
+            "description": "Password managers and VPNs",
+            "apps": [
+                "1Password",
+                "LastPass",
+                "NordVPN",
+                "ExpressVPN",
+                "Auth0"
+            ]
+        },
+        {
+            "name": "Hosting",
+            "description": "Web hosting and domains",
+            "apps": [
+                "GoDaddy",
+                "Namecheap",
+                "Bluehost",
+                "HostGator",
+                "Vercel"
+            ]
+        },
+        {
+            "name": "Analytics",
+            "description": "Data tracking",
+            "apps": [
+                "Google Analytics",
+                "Mixpanel",
+                "Amplitude",
+                "Tableau",
+                "Segment"
+            ]
+        },
+        {
+            "name": "Marketing",
+            "description": "Email marketing and SEO",
+            "apps": [
+                "Mailchimp",
+                "HubSpot",
+                "SEMrush",
+                "Ahrefs",
+                "Google Ads"
+            ]
+        },
+        {
+            "name": "Education",
+            "description": "Learning platforms",
+            "apps": [
+                "Udemy",
+                "Coursera",
+                "edX",
+                "Pluralsight",
+                "Khan Academy"
+            ]
+        },
+        {
+            "name": "Travel",
+            "description": "Booking and transport",
+            "apps": [
+                "Airbnb",
+                "Uber",
+                "Booking.com",
+                "Expedia",
+                "Lyft"
+            ]
+        },
+        {
+            "name": "Utilities",
+            "description": "General tools",
+            "apps": [
+                "Dropbox",
+                "Google Drive",
+                "OneDrive",
+                "Box",
+                "Evernote"
+            ]
+        },
+        {
+            "name": "Database",
+            "description": "DBaaS",
+            "apps": [
+                "MongoDB Atlas",
+                "Supabase",
+                "PlanetScale",
+                "Firebase",
+                "Redis Labs"
+            ]
+        }
+    ]
+}

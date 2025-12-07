@@ -4,62 +4,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Password Vault</title>
+    <title>Secure Vault v2</title>
     <style>
-        body {
-            font-family: sans-serif;
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-            background: #f4f4f4;
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --accent-hover: #2980b9;
+            --bg: #ecf0f1;
+            --text: #333;
+            --sidebar-width: 250px;
         }
 
-        .container {
-            background: white;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* SIDEBAR */
+        #sidebar {
+            width: var(--sidebar-width);
+            background: var(--primary);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            color: #ecf0f1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: block;
+            text-decoration: none;
+            color: #bdc3c7;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: var(--secondary);
+            color: white;
+        }
+
+        /* MAIN CONTENT */
+        #main-content {
+            flex: 1;
             padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .view {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        .view.active {
+            display: block;
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* CARD STYLE */
+        .card {
+            background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
         }
 
         h1,
-        h2 {
-            color: #333;
+        h3 {
+            color: var(--primary);
+            margin-top: 0;
         }
 
+        /* FORMS */
         .form-group {
             margin-bottom: 1rem;
         }
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
+            font-weight: 500;
         }
 
-        input {
+        input,
+        select,
+        textarea {
             width: 100%;
-            padding: 0.5rem;
+            padding: 0.6rem;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 1rem;
             box-sizing: border-box;
         }
 
         button {
-            background: #007bff;
-            color: white;
-            padding: 0.5rem 1rem;
+            padding: 0.6rem 1.2rem;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-weight: 600;
+            background: var(--accent);
+            color: white;
+            transition: background 0.2s;
         }
 
         button:hover {
-            background: #0056b3;
+            background: var(--accent-hover);
         }
 
-        .hidden {
-            display: none;
+        button.danger {
+            background: #e74c3c;
         }
 
+        button.danger:hover {
+            background: #c0392b;
+        }
+
+        button.secondary {
+            background: #95a5a6;
+        }
+
+        button.secondary:hover {
+            background: #7f8c8d;
+        }
+
+        /* TABLES */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -69,183 +166,538 @@
         th,
         td {
             text-align: left;
-            padding: 0.5rem;
-            border-bottom: 1px solid #ddd;
+            padding: 0.8rem;
+            border-bottom: 1px solid #eee;
         }
 
-        .password-display {
-            font-family: monospace;
-            color: #d9534f;
+        th {
+            background: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+        }
+
+        /* UTILS */
+        .hidden {
+            display: none !important;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .badge {
+            background: #eee;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>🔐 Secure Vault</h1>
 
-        <div id="setup-section" class="hidden">
-            <h2>Initial Setup</h2>
-            <p>Create your Master User. <strong>WARNING: If you lose your Master Password, your data is lost
-                    forever.</strong></p>
+    <!-- SIDEBAR -->
+    <div id="sidebar" class="hidden"> <!-- Hidden until setup -->
+        <h2>🔐 Vault v2</h2>
+        <div class="nav-item active" onclick="showView('dashboard')">Dashboard</div>
+        <div class="nav-item" onclick="showView('categories')">categories</div>
+        <div class="nav-item" onclick="showView('applications')">Applications</div>
+        <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--secondary);">
             <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="setup-user">
+                <label style="color: #bdc3c7; font-size: 0.8rem;">Session Master Password</label>
+                <input type="password" id="session-mp" style="padding: 0.4rem; font-size: 0.9rem;"
+                    placeholder="Required for write ops">
             </div>
-            <div class="form-group">
-                <label>Master Password</label>
-                <input type="password" id="setup-pass">
-            </div>
-            <button onclick="setupUser()">Initialize Vault</button>
-        </div>
-
-        <div id="main-section" class="hidden">
-            <div class="form-group">
-                <label>Session Master Password (Required for all operations)</label>
-                <input type="password" id="session-mp" placeholder="Enter Master Password to Unlock/Add">
-            </div>
-
-            <hr>
-
-            <h3>Add New Password</h3>
-            <div class="form-group">
-                <input type="text" id="new-site" placeholder="Site Name (e.g. Google)">
-            </div>
-            <div class="form-group">
-                <input type="text" id="new-username" placeholder="Username/Email">
-            </div>
-
-            <!-- Category and Environment -->
-            <div class="form-group" style="display: flex; gap: 1rem;">
-                <div style="flex: 1;">
-                    <label>Category</label>
-                    <input type="text" id="new-category" list="category-list" placeholder="General">
-                    <datalist id="category-list">
-                        <option value="General"></option>
-                        <option value="Work"></option>
-                        <option value="App"></option>
-                        <option value="API Key"></option>
-                        <option value="Finance"></option>
-                    </datalist>
-                </div>
-                <div style="flex: 1;">
-                    <label>Environment</label>
-                    <select id="new-environment" style="width: 100%; padding: 0.5rem;">
-                        <option value="Production">Production</option>
-                        <option value="Staging">Staging</option>
-                        <option value="Development">Development</option>
-                        <option value="Local">Local</option>
-                        <option value="Test">Test</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <input type="password" id="new-pass" placeholder="Password">
-            </div>
-            <button onclick="addPassword()">Save Encrypted</button>
-
-            <hr>
-
-            <h3>Bulk Actions</h3>
-            <div class="form-group" style="display: flex; gap: 1rem; align-items: center;">
-                <button onclick="window.location.href='/export/template'" style="background: #28a745;">Download CSV
-                    Template</button>
-
-                <div
-                    style="flex: 1; display: flex; gap: 0.5rem; align-items: center; border: 1px dashed #ccc; padding: 0.5rem;">
-                    <input type="file" id="csv-file" accept=".csv">
-                    <button onclick="importCSV()" style="background: #17a2b8;">Import CSV</button>
-                </div>
-            </div>
-
-            <hr>
-
-            <h3>Stored Passwords</h3>
-            <button onclick="loadItems()">Refresh List</button>
-            <table id="items-table">
-                <thead>
-                    <tr>
-                        <th>Site</th>
-                        <th>User</th>
-                        <th>Cat</th>
-                        <th>Env</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
         </div>
     </div>
 
+    <!-- MAIN -->
+    <div id="main-content">
+
+        <!-- SETUP VIEW -->
+        <div id="view-setup" class="view">
+            <div class="card" style="max-width: 400px; margin: 4rem auto; text-align: center;">
+                <h2>Welcome to Vault</h2>
+                <p>Initialize your secure vault to begin.</p>
+                <div class="form-group" style="text-align: left;">
+                    <label>Create Username</label>
+                    <input type="text" id="setup-user">
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label>Create Master Password</label>
+                    <input type="password" id="setup-pass">
+                </div>
+                <button onclick="doSetup()" style="width: 100%;">Initialize System</button>
+            </div>
+        </div>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="view">
+            <h1>Dashboard</h1>
+            <div class="flex-row">
+                <div class="card" style="flex: 1; text-align: center;">
+                    <h3 id="stat-calc-cats">0</h3>
+                    <p style="color: grey;">Categories</p>
+                </div>
+                <div class="card" style="flex: 1; text-align: center;">
+                    <h3 id="stat-calc-apps">0</h3>
+                    <p style="color: grey;">Applications</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Quick Actions</h3>
+                <div class="flex-row">
+                    <button onclick="showView('categories')">Manage Categories</button>
+                    <button onclick="showView('applications')">Browse Apps</button>
+                    <button onclick="importJSON()" style="background: #8e44ad;">Import JSON</button>
+                    <button onclick="seedData()" class="secondary">Load Test Data (Seed)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORIES VIEW -->
+        <div id="view-categories" class="view">
+            <div class="flex-row" style="justify-content: space-between;">
+                <h1>Categories</h1>
+                <button onclick="toggleModal('modal-add-cat')">+ New Category</button>
+            </div>
+
+            <div class="card">
+                <table id="table-cats">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- APPLICATIONS VIEW -->
+        <div id="view-applications" class="view">
+            <div class="flex-row" style="justify-content: space-between;">
+                <h1>Applications</h1>
+                <div>
+                    <select id="app-filter-cat" onchange="loadApplications()" style="width: 200px; padding: 0.6rem;">
+                        <option value="">All Categories</option>
+                    </select>
+                    <button onclick="toggleModal('modal-add-app')">+ New App</button>
+                </div>
+            </div>
+
+            <div id="apps-container" style="margin-top: 1rem;"></div>
+        </div>
+
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Add Category Modal -->
+    <div id="modal-add-cat" class="hidden"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;">
+        <div class="card" style="width: 400px;">
+            <h3>New Category</h3>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="new-cat-name">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="new-cat-desc">
+            </div>
+            <div class="flex-row" style="justify-content: flex-end;">
+                <button onclick="toggleModal('modal-add-cat')" class="secondary">Cancel</button>
+                <button onclick="createCategory()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add App Modal -->
+    <div id="modal-add-app" class="hidden"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;">
+        <div class="card" style="width: 400px;">
+            <h3>New Application</h3>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="new-app-cat"></select>
+            </div>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="new-app-name">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="new-app-desc">
+            </div>
+            <div class="flex-row" style="justify-content: flex-end;">
+                <button onclick="toggleModal('modal-add-app')" class="secondary">Cancel</button>
+                <button onclick="createApplication()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Password Modal -->
+    <div id="modal-add-pw" class="hidden"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;">
+        <div class="card" style="width: 400px;">
+            <h3>Add Password to <span id="add-pw-appname"></span></h3>
+            <input type="hidden" id="add-pw-appid">
+            <div class="form-group">
+                <label>Username/Email</label>
+                <input type="text" id="new-pw-user">
+            </div>
+            <div class="form-group">
+                <label>Environment</label>
+                <select id="new-pw-env">
+                    <option value="Production">Production</option>
+                    <option value="Dev">Dev</option>
+                    <option value="Staging">Staging</option>
+                    <option value="Local">Local</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="new-pw-pass">
+            </div>
+            <div class="flex-row" style="justify-content: flex-end;">
+                <button onclick="toggleModal('modal-add-pw')" class="secondary">Cancel</button>
+                <button onclick="createPassword()">Save</button>
+            </div>
+        </div>
+    </div>
+
+
     <script>
-        const API_URL = "";
+        const BASE_URL = "";
+        let CURRENT_VIEW = "view-dashboard";
 
-        async function setupUser() {
-            const username = document.getElementById('setup-user').value;
-            const password = document.getElementById('setup-pass').value;
+        // --- INIT ---
+        (async () => {
+            // Check if setup needed
+            try {
+                const res = await fetch('/ui'); // Just a ping, or heuristic
+                // Real check: try getting cats. if 400 "sys not init", show setup
+                const res2 = await fetch('/categories');
+                if (res2.status === 400) {
+                    showSetup();
+                    return;
+                }
+            } catch (e) { }
 
+            document.getElementById('sidebar').classList.remove('hidden');
+            showView('dashboard');
+        })();
+
+        function showSetup() {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-setup').classList.add('active');
+            document.getElementById('sidebar').classList.add('hidden');
+        }
+
+        async function doSetup() {
+            const u = document.getElementById('setup-user').value;
+            const p = document.getElementById('setup-pass').value;
             const res = await fetch('/setup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, master_password: password })
+                body: JSON.stringify({ username: u, master_password: p })
+            });
+            if (res.ok) {
+                location.reload();
+            } else {
+                alert("Error setup");
+            }
+        }
+
+        // --- NAV ---
+        function showView(viewName) {
+            // Nav Active State
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const navItem = document.querySelector(`.nav-item[onclick="showView('${viewName}')"]`);
+            if (navItem) navItem.classList.add('active');
+
+            // View State
+            const target = `view-${viewName}`;
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(target).classList.add('active');
+
+            // Load Data
+            if (viewName === 'dashboard') loadDashboard();
+            if (viewName === 'categories') loadCategories();
+            if (viewName === 'applications') loadApplications();
+        }
+
+        function toggleModal(id) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                // If opening Add App, load cats dropdown
+                if (id === 'modal-add-app') loadCatsDropdown('new-app-cat');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        function getMP() {
+            const mp = document.getElementById('session-mp').value;
+            if (!mp) { alert("Please enter Session Master Password in the Sidebar!"); return null; }
+            return mp;
+        }
+
+        // --- DASHBOARD ---
+        async function loadDashboard() {
+            const c = await (await fetch('/categories')).json();
+            const a = await (await fetch('/applications')).json();
+            document.getElementById('stat-calc-cats').innerText = c.length;
+            document.getElementById('stat-calc-apps').innerText = a.length;
+        }
+
+        async function seedData() {
+            const mp = getMP();
+            if (!mp) return;
+            const res = await fetch('/dev/seed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ master_password: mp })
+            });
+            alert(await res.text());
+            loadDashboard();
+        }
+
+        // --- CATEGORIES ---
+        async function loadCategories() {
+            const res = await fetch('/categories');
+            const data = await res.json();
+            const tbody = document.querySelector('#table-cats tbody');
+            tbody.innerHTML = '';
+            data.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${c.name}</b></td>
+                    <td>${c.description || '-'}</td>
+                    <td>
+                        <button class="secondary" onclick="openEditCatModal('${c.id}', '${c.name}', '${c.description || ''}')">Edit</button>
+                        <button class="danger" onclick="deleteCategory('${c.id}', '${c.name}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function deleteCategory(id, name) {
+            const mp = getMP(); if (!mp) return;
+            if (!confirm(`WARNING: Deleting category '${name}' will also delete ALL applications and passwords inside it.\n\nAre you sure?`)) return;
+
+            const res = await fetch(`/categories/${id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ master_password: mp })
+            });
+            if (res.ok) {
+                loadCategories();
+            } else {
+                alert("Error deleting: " + (await res.json()).detail);
+            }
+        }
+
+        async function openEditCatModal(id, name, desc) {
+            const newName = prompt("Edit Category Name:", name);
+            if (newName === null) return;
+            const newDesc = prompt("Edit Description:", desc);
+            if (newDesc === null) return;
+
+            const mp = getMP(); if (!mp) return;
+
+            const res = await fetch(`/categories/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName, description: newDesc, master_password: mp })
             });
 
+            if (res.ok) loadCategories();
+            else alert("Error updating: " + (await res.json()).detail);
+        }
+
+        async function createCategory() {
+            const mp = getMP(); if (!mp) return;
+            const name = document.getElementById('new-cat-name').value;
+            const desc = document.getElementById('new-cat-desc').value;
+
+            const res = await fetch('/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description: desc, master_password: mp })
+            });
             if (res.ok) {
-                alert('Setup Complete! You can now use the vault.');
-                document.getElementById('setup-section').classList.add('hidden');
-                document.getElementById('main-section').classList.remove('hidden');
-                loadItems();
+                toggleModal('modal-add-cat');
+                loadCategories();
             } else {
-                const err = await res.json();
-                alert('Error: ' + err.detail);
+                alert((await res.json()).detail);
             }
         }
 
-        async function loadItems() {
-            const res = await fetch('/items');
-            if (res.ok) {
-                const items = await res.json();
-                const tbody = document.querySelector('#items-table tbody');
-                tbody.innerHTML = '';
-                items.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${item.site_name}</td>
-                        <td>${item.username || ''}</td>
-                        <td><small>${item.category}</small></td>
-                        <td><small>${item.environment}</small></td>
-                        <td>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button onclick="decrypt('${item.id}')">Reveal</button>
-                                <button onclick="deleteItem('${item.id}', '${item.site_name}')" style="background: #dc3545;">Delete</button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
+        // --- APPLICATIONS ---
+        async function loadCatsDropdown(targetId) {
+            const res = await fetch('/categories');
+            const data = await res.json();
+            const sel = document.getElementById(targetId);
+            sel.innerHTML = '';
+            data.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                sel.appendChild(opt);
+            });
+
+            // Also populate the filter dropdown in Apps view
+            if (targetId === 'new-app-cat') { // Just heuristic to do it once
+                const filter = document.getElementById('app-filter-cat');
+                const oldVal = filter.value;
+                filter.innerHTML = '<option value="">All Categories</option>';
+                data.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    filter.appendChild(opt);
                 });
-            } else {
-                console.error("Failed to load items");
+                filter.value = oldVal;
             }
         }
 
-        async function addPassword() {
-            const mp = document.getElementById('session-mp').value;
-            if (!mp) return alert('Please enter Master Password above first.');
+        async function loadApplications() {
+            await loadCatsDropdown('new-app-cat'); // Ensure filter is populated
+            const catId = document.getElementById('app-filter-cat').value;
+            let url = '/applications';
+            if (catId) url += `?category_id=${catId}`;
 
-            const site = document.getElementById('new-site').value;
-            const user = document.getElementById('new-username').value;
-            const cat = document.getElementById('new-category').value || 'General';
-            const env = document.getElementById('new-environment').value;
-            const pass = document.getElementById('new-pass').value;
+            const res = await fetch(url);
+            const apps = await res.json();
 
-            const res = await fetch('/items', {
+            const container = document.getElementById('apps-container');
+            container.innerHTML = '';
+
+            apps.forEach(app => {
+                const el = document.createElement('div');
+                el.className = 'card';
+                el.innerHTML = `
+                    <div class="flex-row" style="justify-content: space-between; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="margin:0">${app.name}</h3>
+                            <p style="margin:0.2rem 0; font-size: 0.9rem; color: #7f8c8d;">${app.description || ''}</p>
+                        </div>
+                        <div class="flex-row">
+                             <button class="secondary" onclick="openEditAppModal('${app.id}', '${app.name}', '${app.description || ''}', '${app.category_id}')">Edit</button>
+                             <button class="danger" onclick="deleteApplication('${app.id}', '${app.name}')">Delete</button>
+                             <button onclick="openAddPwModal('${app.id}', '${app.name}')">+ Pw</button>
+                        </div>
+                    </div>
+                    
+                    <div id="pw-list-${app.id}" style="background: #fdfdfd; padding: 1rem; border-radius: 4px; border: 1px solid #eee;">
+                        Loading passwords...
+                    </div>
+                `;
+                container.appendChild(el);
+                loadPasswordsForApp(app.id);
+            });
+        }
+
+        async function deleteApplication(id, name) {
+            const mp = getMP(); if (!mp) return;
+            if (!confirm(`WARNING: Deleting application '${name}' will delete all its passwords.\n\nContinue?`)) return;
+            const res = await fetch(`/applications/${id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ master_password: mp })
+            });
+            if (res.ok) loadApplications();
+            else alert("Error: " + (await res.json()).detail);
+        }
+
+        async function openEditAppModal(id, name, desc, catId) {
+            const newName = prompt("Edit App Name:", name);
+            if (!newName) return;
+            const newDesc = prompt("Edit App Description:", desc);
+            if (newDesc === null) return;
+
+            const mp = getMP(); if (!mp) return;
+
+            const res = await fetch(`/applications/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName, description: newDesc, category_id: catId, master_password: mp })
+            });
+
+            if (res.ok) loadApplications();
+            else alert("Error updating: " + (await res.json()).detail);
+        }
+
+        async function createApplication() {
+            const mp = getMP(); if (!mp) return;
+            const name = document.getElementById('new-app-name').value;
+            const desc = document.getElementById('new-app-desc').value;
+            const cat = document.getElementById('new-app-cat').value;
+
+            const res = await fetch('/applications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description: desc, category_id: cat, master_password: mp })
+            });
+            if (res.ok) {
+                toggleModal('modal-add-app');
+                loadApplications();
+            } else {
+                alert((await res.json()).detail);
+            }
+        }
+
+        // --- PASSWORDS ---
+        async function loadPasswordsForApp(appId) {
+            const res = await fetch(`/applications/${appId}/passwords`);
+            const pws = await res.json();
+            const container = document.getElementById(`pw-list-${appId}`);
+
+            if (pws.length === 0) {
+                container.innerHTML = '<span style="color:#aaa; font-style:italic;">No passwords stored.</span>';
+                return;
+            }
+
+            let html = '<table style="margin:0;"><thead><tr><th>User</th><th>Env</th><th>Action</th></tr></thead><tbody>';
+            pws.forEach(p => {
+                html += `<tr>
+                    <td>${p.username || '-'}</td>
+                    <td><span class="badge">${p.environment}</span></td>
+                    <td><button onclick="revealPw('${p.id}')">Reveal</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function openAddPwModal(appId, appName) {
+            document.getElementById('add-pw-appname').textContent = appName;
+            document.getElementById('add-pw-appid').value = appId;
+            toggleModal('modal-add-pw');
+        }
+
+        async function createPassword() {
+            const mp = getMP(); if (!mp) return;
+            const appId = document.getElementById('add-pw-appid').value;
+            const user = document.getElementById('new-pw-user').value;
+            const env = document.getElementById('new-pw-env').value;
+            const pass = document.getElementById('new-pw-pass').value;
+
+            const res = await fetch('/passwords', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    site_name: site,
+                    application_id: appId,
                     username: user,
-                    category: cat,
                     environment: env,
                     plaintext_password: pass,
                     master_password: mp
@@ -253,26 +705,16 @@
             });
 
             if (res.ok) {
-                alert('Password Saved!');
-                document.getElementById('new-site').value = '';
-                document.getElementById('new-username').value = '';
-                document.getElementById('new-pass').value = '';
-                loadItems();
+                toggleModal('modal-add-pw');
+                loadPasswordsForApp(appId);
             } else {
-                const err = await res.json();
-                alert('Error: ' + err.detail);
-                if (err && err.detail && err.detail.includes("not initialized")) {
-                    document.getElementById('setup-section').classList.remove('hidden');
-                    document.getElementById('main-section').classList.add('hidden');
-                }
+                alert((await res.json()).detail);
             }
         }
 
-        async function decrypt(id) {
-            const mp = document.getElementById('session-mp').value;
-            if (!mp) return alert('Please enter Master Password above first.');
-
-            const res = await fetch('/decrypt', {
+        async function revealPw(id) {
+            const mp = getMP(); if (!mp) return;
+            const res = await fetch('/passwords/decrypt', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -280,74 +722,14 @@
                     master_password: mp
                 })
             });
-
             if (res.ok) {
                 const data = await res.json();
-                alert(`Decrypted Password for ${data.site_name}:\n\n${data.decrypted_password}`);
+                alert("Password: " + data.decrypted_password);
             } else {
-                const err = await res.json();
-                alert('Error: ' + err.detail);
+                alert("Error: " + (await res.json()).detail);
             }
         }
 
-        async function deleteItem(id, site) {
-            const mp = document.getElementById('session-mp').value;
-            if (!mp) return alert('Please enter Master Password for authorization.');
-
-            if (!confirm(`Are you sure you want to delete ${site}?`)) return;
-
-            const formData = new FormData();
-            formData.append('master_password', mp);
-
-            const res = await fetch(`/items/${id}`, {
-                method: 'DELETE',
-                body: formData
-            });
-
-            if (res.ok) {
-                loadItems();
-            } else {
-                const err = await res.json();
-                alert('Error: ' + err.detail);
-            }
-        }
-
-        async function importCSV() {
-            const mp = document.getElementById('session-mp').value;
-            if (!mp) return alert('Please enter Master Password for encryption.');
-
-            const fileInput = document.getElementById('csv-file');
-            if (fileInput.files.length === 0) return alert('Please select a CSV file.');
-
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('master_password', mp);
-
-            const res = await fetch('/import/csv', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (res.ok) {
-                const result = await res.json();
-                alert(result.message);
-                loadItems();
-            } else {
-                const err = await res.json();
-                alert('Error: ' + err.detail);
-            }
-        }
-
-        // Init Check
-        (async () => {
-            const res = await fetch('/items');
-            if (res.status === 400 || res.status === 500) {
-                document.getElementById('setup-section').classList.remove('hidden');
-            } else {
-                document.getElementById('main-section').classList.remove('hidden');
-                loadItems();
-            }
-        })();
     </script>
 </body>
 
