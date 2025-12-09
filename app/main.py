@@ -6,7 +6,10 @@ from sqlalchemy import func
 from typing import List
 from uuid import UUID
 
-from . import models, schemas, database, crypto
+from . import models, schemas, database, crypto, csv_utils
+import csv
+import io
+from fastapi.responses import StreamingResponse
 
 app = FastAPI(title="Secure Password Vault v2")
 
@@ -36,6 +39,11 @@ def read_root():
 @app.get("/ui", response_class=FileResponse)
 def read_ui():
     return FileResponse('static/index.html')
+
+@app.get("/status")
+def get_status(db: Session = Depends(database.get_db)):
+    user = db.query(models.User).first()
+    return {"initialized": bool(user)}
 
 # --- AUTH HELPERS ---
 def verify_mp(db: Session, mp: str):
@@ -252,6 +260,56 @@ def seed_data(master_password: str = Body(...), db: Session = Depends(database.g
     app2 = models.Application(name="Slack", category_id=cat_work.id)
     app3 = models.Application(name="Netflix", category_id=cat_pers.id)
 # --- IMPORT / EXPORT ---
+@app.post("/export/csv")
+def export_csv(master_password: str = Body(...), db: Session = Depends(database.get_db)):
+    """Export all decrypted data to CSV."""
+    user = verify_mp(db, master_password)
+    
+    # Generate CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    writer.writerow(["Category", "Application", "App Description", "Username", "Environment", "Password", "Last Updated"])
+    
+    # Fetch all data
+    cats = db.query(models.Category).all()
+    
+    master_key = crypto.derive_key(master_password, user.master_key_salt)
+    
+    for c in cats:
+        for a in c.applications:
+            # If no passwords, write app info at least? 
+            # Design choice: Only write rows for passwords, effectively flattening the hierarchy
+            pws = db.query(models.PasswordEntry).filter(models.PasswordEntry.application_id == a.id).all()
+            if not pws:
+                 # Write a row with empty credentials just to list the app
+                 writer.writerow([c.name, a.name, a.description, "", "", "", ""])
+            else:
+                 for p in pws:
+                     # Decrypt
+                     try:
+                         plaintext = crypto.decrypt_password(p.encrypted_password, p.nonce, master_key)
+                     except:
+                         plaintext = "[DECRYPTION ERROR]"
+                     
+                     writer.writerow([
+                         c.name, 
+                         a.name, 
+                         a.description, 
+                         p.username, 
+                         p.environment, 
+                         plaintext,
+                         p.updated_at
+                     ])
+    
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]), 
+        media_type="text/csv", 
+        headers={"Content-Disposition": "attachment; filename=vault_export.csv"}
+    )
+
 @app.get("/export", response_model=dict)
 def export_data(master_password: str = Body(...), db: Session = Depends(database.get_db)):
     """Export full hierarchy to JSON."""
@@ -280,7 +338,7 @@ class ImportData(BaseModel):
 
 @app.post("/import")
 def import_data(data: ImportData, db: Session = Depends(database.get_db)):
-    """Bulk create categories and apps from JSON."""
+    """Bulk create categories and apps from JSON (Structure only, legacy support)."""
     verify_mp(db, data.master_password)
     
     created_cats = 0
@@ -310,3 +368,32 @@ def import_data(data: ImportData, db: Session = Depends(database.get_db)):
             db.commit() # Commit all apps for this cat
             
     return {"message": f"Imported {created_cats} categories and {created_apps} applications."}
+
+# --- FILE IMPORT ---
+from fastapi import UploadFile, File, Form
+
+@app.post("/import/file")
+def import_file(
+    file: UploadFile = File(...), 
+    master_password: str = Form(...), 
+    db: Session = Depends(database.get_db)
+):
+    """Import data from CSV (Chrome/Generic) file."""
+    try:
+        content = file.file.read()
+        
+        # Determine handler based on extension or content-type
+        filename = file.filename.lower()
+        if filename.endswith(".csv"):
+             success, errors = csv_utils.process_csv_import(content, master_password, db)
+             return {"message": f"Import complete. Success: {success}, Errors: {errors}"}
+        
+        # Future: JSON handler
+        # if filename.endswith(".json"): ...
+        
+        raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a .csv file.")
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")

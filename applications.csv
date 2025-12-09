@@ -1,0 +1,77 @@
+id_aplicacion,nombre_aplicacion,id_categoria
+101,BBVA,1
+102,Banco Santander,1
+103,CaixaBank,1
+104,PayPal,1
+105,Agencia Tributaria,1
+106,Mapfre,1
+107,Mutua Madrileña,1
+108,ING Direct / Ahorro,1
+109,Coinbase,1
+110,TransferWise,1
+201,Amazon,2
+202,AliExpress,2
+203,El Corte Inglés,2
+204,Carrefour,2
+205,Mercadona,2
+206,eBay,2
+207,Wallapop,2
+208,PC Componentes,2
+209,Decathlon,2
+210,MediaMarkt,2
+211,Groupon,2
+301,Netflix,3
+302,Spotify,3
+303,Disney+,3
+304,HBO Max,3
+305,Movistar+,3
+306,Plex,3
+307,Entradas.com,3
+308,Kinepolis,3
+309,DAZN,3
+401,Facebook,4
+402,Twitter / X,4
+403,Instagram,4
+404,LinkedIn,4
+405,Pinterest,4
+406,Skype,4
+501,UNIR (Universidad Internacional de La Rioja),5
+502,Duolingo,5
+503,Udemy,5
+504,Coursera,5
+505,EdX,5
+506,Campus MVP,5
+507,Educamos,5
+508,Ministerio Educación,5
+509,Oxford Premium,5
+601,Google Accounts,6
+602,Microsoft Live,6
+603,AWS Console,6
+604,GitHub,6
+605,Docker Hub,6
+606,Oracle,6
+607,JetBrains,6
+608,Localhost Environments,6
+609,Servidores Internos (IPs),6
+701,Booking.com,7
+702,Airbnb,7
+703,Renfe,7
+704,Iberia,7
+705,Ryanair,7
+706,Alsa,7
+707,Uber,7
+708,TripAdvisor,7
+709,BiciMad,7
+801,Vodafone,8
+802,Naturgy,8
+803,Iberdrola,8
+804,Canal de Isabel II,8
+805,Ayuntamiento Madrid,8
+806,Correos,8
+807,Seur,8
+901,InfoJobs,9
+902,Appen,9
+903,Trello,9
+904,Signaturit,9
+905,Dropbox,9
+906,Intranet Corporativa,9

@@ -252,7 +252,7 @@
                 <div class="flex-row">
                     <button onclick="showView('categories')">Manage Categories</button>
                     <button onclick="showView('applications')">Browse Apps</button>
-                    <button onclick="importJSON()" style="background: #8e44ad;">Import JSON</button>
+                    <button onclick="openImportModal()" style="background: #8e44ad;">Import CSV</button>
                     <button onclick="seedData()" class="secondary">Load Test Data (Seed)</button>
                 </div>
             </div>
@@ -284,10 +284,13 @@
             <div class="flex-row" style="justify-content: space-between;">
                 <h1>Applications</h1>
                 <div>
+                    <input type="text" id="app-search" placeholder="Search Apps..." onkeyup="loadApplications()"
+                        style="width: 150px; padding: 0.6rem; margin-right: 0.5rem;">
                     <select id="app-filter-cat" onchange="loadApplications()" style="width: 200px; padding: 0.6rem;">
                         <option value="">All Categories</option>
                     </select>
                     <button onclick="toggleModal('modal-add-app')">+ New App</button>
+                    <button onclick="exportCSV()" style="background: #27ae60; margin-left: 0.5rem;">Export CSV</button>
                 </div>
             </div>
 
@@ -373,6 +376,23 @@
     </div>
 
 
+    <!-- Import Modal -->
+    <div id="modal-import" class="hidden"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;">
+        <div class="card" style="width: 400px;">
+            <h3>Import Passwords</h3>
+            <p style="font-size:0.9rem; color: #666;">Supports Chrome CSV exports and Vault CSV backups.</p>
+            <div class="form-group">
+                <label>Select CSV File</label>
+                <input type="file" id="import-file" accept=".csv">
+            </div>
+            <div class="flex-row" style="justify-content: flex-end;">
+                <button onclick="toggleModal('modal-import')" class="secondary">Cancel</button>
+                <button onclick="uploadFileImport()" style="background: #8e44ad;">Import</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const BASE_URL = "";
         let CURRENT_VIEW = "view-dashboard";
@@ -381,14 +401,15 @@
         (async () => {
             // Check if setup needed
             try {
-                const res = await fetch('/ui'); // Just a ping, or heuristic
-                // Real check: try getting cats. if 400 "sys not init", show setup
-                const res2 = await fetch('/categories');
-                if (res2.status === 400) {
-                    showSetup();
-                    return;
+                const res = await fetch('/status');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (!data.initialized) {
+                        showSetup();
+                        return;
+                    }
                 }
-            } catch (e) { }
+            } catch (e) { console.error(e); }
 
             document.getElementById('sidebar').classList.remove('hidden');
             showView('dashboard');
@@ -468,6 +489,38 @@
             });
             alert(await res.text());
             loadDashboard();
+        }
+
+        async function uploadFileImport() {
+            const mp = getMP(); if (!mp) return;
+            const fileInput = document.getElementById('import-file');
+            if (fileInput.files.length === 0) {
+                alert("Please select a file.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            formData.append("master_password", mp);
+
+            const res = await fetch('/import/file', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                alert(result.message);
+                toggleModal('modal-import');
+                loadDashboard();
+            } else {
+                alert("Import Failed: " + result.detail);
+            }
+        }
+
+        // This was previously "importJSON", now upgraded
+        function openImportModal() {
+            toggleModal('modal-import');
         }
 
         // --- CATEGORIES ---
@@ -579,10 +632,12 @@
             const res = await fetch(url);
             const apps = await res.json();
 
+            const searchTerm = document.getElementById('app-search').value.toLowerCase();
             const container = document.getElementById('apps-container');
             container.innerHTML = '';
 
             apps.forEach(app => {
+                if (searchTerm && !app.name.toLowerCase().includes(searchTerm)) return;
                 const el = document.createElement('div');
                 el.className = 'card';
                 el.innerHTML = `
@@ -730,6 +785,28 @@
             }
         }
 
+        async function exportCSV() {
+            const mp = getMP(); if (!mp) return;
+
+            const res = await fetch('/export/csv', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ master_password: mp })
+            });
+
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "vault_export.csv";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else {
+                alert("Export Failed: " + (await res.json()).detail);
+            }
+        }
     </script>
 </body>
 
