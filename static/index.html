@@ -366,7 +366,12 @@
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" id="new-pw-pass">
+                <div class="flex-row">
+                    <input type="password" id="new-pw-pass" style="flex: 1;">
+                    <button class="secondary" onclick="generateRandomPassword()"
+                        title="Generate Random Password">🎲</button>
+                    <button class="secondary" onclick="copyToClipboard()" title="Copy to Clipboard">📋</button>
+                </div>
             </div>
             <div class="flex-row" style="justify-content: flex-end;">
                 <button onclick="toggleModal('modal-add-pw')" class="secondary">Cancel</button>
@@ -396,6 +401,69 @@
     <script>
         const BASE_URL = "";
         let CURRENT_VIEW = "view-dashboard";
+
+        // --- UTILS ---
+        function generateRandomPassword(length = 16) {
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+            let ret = "";
+            for (let i = 0, n = charset.length; i < length; ++i) {
+                ret += charset.charAt(Math.floor(Math.random() * n));
+            }
+            const el = document.getElementById('new-pw-pass');
+            el.value = ret;
+            el.type = "text"; // Show it so user can see what was generated
+        }
+
+        function copyToClipboard() {
+            const el = document.getElementById('new-pw-pass');
+            if (!el.value) return;
+
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+
+            // Try modern clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(el.value).then(() => {
+                    btn.innerHTML = "✅";
+                    setTimeout(() => btn.innerHTML = originalText, 1000);
+                }).catch(err => {
+                    console.error('Clipboard API failed, trying fallback: ', err);
+                    fallbackCopyToClipboard(el.value, btn, originalText);
+                });
+            } else {
+                // Fallback for non-secure contexts
+                fallbackCopyToClipboard(el.value, btn, originalText);
+            }
+        }
+
+        function fallbackCopyToClipboard(text, btn, originalText) {
+            // Create a temporary textarea
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+
+            // Make it invisible but part of DOM
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    btn.innerHTML = "✅";
+                    setTimeout(() => btn.innerHTML = originalText, 1000);
+                } else {
+                    alert("Failed to copy password. Please copy manually.");
+                }
+            } catch (err) {
+                console.error('Fallback copy failed: ', err);
+                alert("Failed to copy password. Please copy manually.");
+            }
+
+            document.body.removeChild(textArea);
+        }
 
         // --- INIT ---
         (async () => {
