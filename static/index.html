@@ -795,7 +795,10 @@
                 html += `<tr>
                     <td>${p.username || '-'}</td>
                     <td><span class="badge">${p.environment}</span></td>
-                    <td><button onclick="revealPw('${p.id}')">Reveal</button></td>
+                    <td>
+                        <button onclick="revealPw('${p.id}')" style="margin-right:5px;">Reveal</button>
+                        <button class="danger" onclick="deletePasswordEntry('${p.id}', '${appId}')">Delete</button>
+                    </td>
                 </tr>`;
             });
             html += '</tbody></table>';
@@ -832,6 +835,23 @@
                 loadPasswordsForApp(appId);
             } else {
                 alert((await res.json()).detail);
+            }
+        }
+
+        async function deletePasswordEntry(id, appId) {
+            const mp = getMP(); if (!mp) return;
+            if (!confirm("Are you sure you want to delete this password? This action cannot be undone.")) return;
+
+            const res = await fetch(`/passwords/${id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ master_password: mp })
+            });
+
+            if (res.ok) {
+                loadPasswordsForApp(appId);
+            } else {
+                alert("Error deleting: " + (await res.json()).detail);
             }
         }
 
